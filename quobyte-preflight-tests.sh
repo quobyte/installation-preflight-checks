@@ -1,5 +1,5 @@
 #!/bin/bash
-#SSH_OPTS="-o BatchMode=yes"
+SSH_OPTS="-o BatchMode=yes"
 
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <servers-file> <clients-file>"
@@ -82,7 +82,7 @@ echo ""
 
 echo "3. Testing large pings (MTU check)..."
 for h in $server_hosts $client_hosts; do
-    peers=$(cat "$servers" | grep -v $h)
+    peers=$(grep -vxF "$h" <<< "$server_hosts")
     ssh $SSH_OPTS $h 'for peer in '$peers'; do ping -n -c 3 -i 0.4 -W 0.5 -s 12000 $peer > /dev/null; if [ $? -ne 0 ]; then exit 1; fi; done'
     if [ $? -ne 0 ]; then
         echo "   !! failed to send large pings from host $h"
@@ -94,8 +94,8 @@ echo ""
 
 echo "4. Basic packet loss testing with flood pings..."
 for h in $server_hosts $client_hosts; do
-    peers=$(cat "$servers" | grep -v $h)
-    ssh $SSH_OPTS $h 'for peer in '$peers'; do sudo ping -q -n -f -c 1000 -W 0.1 $peer | grep -q "0% packet loss"; if [ $? -ne 0 ]; then exit 1; fi; done'
+    peers=$(grep -vxF "$h" <<< "$server_hosts")
+    ssh $SSH_OPTS $h 'for peer in '$peers'; do sudo ping -q -n -f -c 1000 -W 0.1 $peer | grep -q " 0% packet loss"; if [ $? -ne 0 ]; then exit 1; fi; done'
     if [ $? -ne 0 ]; then
         echo "   !! failed to send flood pings or packet loss occured on host $h"
         ((errors++))
@@ -175,7 +175,7 @@ echo ""
 echo "9. Checking the number of active ethernet connections on each server..."
 more_than_one=0
 for h in $server_hosts; do
-    ssh $SSH_OPTS $h '[ $(ip -o link show up | grep -E "eth|enp|ens|eno|ibp" | grep -e "NO-CARRIER" | wc -l) -gt 1 ] && exit 1'
+    ssh $SSH_OPTS $h '[ $(ip -o link show up | grep -E "^[0-9]+: (eth|enp|ens|eno|ibp)" | grep -v "NO-CARRIER" | wc -l) -gt 1 ] && exit 1 || exit 0'
     if [ $? -ne 0 ]; then
         more_than_one=1
     fi
