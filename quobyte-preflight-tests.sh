@@ -1,5 +1,5 @@
 #!/bin/bash
-SSH_OPTS="-o BatchMode=yes"
+SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
 LARGE_MTU_SIZE=12000
 
 if [ $# -ne 2 ]; then
@@ -31,7 +31,6 @@ if [ $num_clients -eq 0 ]; then
     echo "You can use one of the server machines as a client."
     exit 3
 fi
-
 
 echo "1. Checking ssh access, sudo and nmap on each machine..."
 errors=0
@@ -98,7 +97,7 @@ for h in $server_hosts $client_hosts; do
     peers=$(grep -vxF "$h" <<< "$server_hosts")
     ssh $SSH_OPTS $h 'for peer in '$peers'; do sudo ping -q -n -f -c 1000 -W 0.1 $peer | grep -q " 0% packet loss"; if [ $? -ne 0 ]; then exit 1; fi; done'
     if [ $? -ne 0 ]; then
-        echo "   !! failed to send flood pings or packet loss occured on host $h"
+        echo "   !! failed to send flood pings or packet loss occurred on host $h"
         ((errors++))
     fi
 done;
@@ -223,12 +222,10 @@ echo "   DONE"
 echo ""
 
 if [ $errors -ne 0 ]; then
-    echo ""
     echo "WARNING: Some hosts had errors during the checks."
     echo "         Please check the affected hosts before you install Quobyte."
     exit 1
 else
-    echo ""
     echo "SUCCESS. All checks completed. You can continue with the Quobyte installer:"
     echo "wget https://www.quobyte.com/install;bash install"
 fi
