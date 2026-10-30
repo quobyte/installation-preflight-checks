@@ -1,5 +1,6 @@
 #!/bin/bash
 SSH_OPTS="-o BatchMode=yes"
+LARGE_MTU_SIZE=12000
 
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <servers-file> <clients-file>"
@@ -83,9 +84,9 @@ echo ""
 echo "3. Testing large pings (MTU check)..."
 for h in $server_hosts $client_hosts; do
     peers=$(grep -vxF "$h" <<< "$server_hosts")
-    ssh $SSH_OPTS $h 'for peer in '$peers'; do ping -n -c 3 -i 0.4 -W 0.5 -s 12000 $peer > /dev/null; if [ $? -ne 0 ]; then exit 1; fi; done'
+    ssh $SSH_OPTS $h 'for peer in '$peers'; do ping -n -c 3 -i 0.4 -W 0.5 -s '$LARGE_MTU_SIZE' $peer > /dev/null; if [ $? -ne 0 ]; then exit 1; fi; done'
     if [ $? -ne 0 ]; then
-        echo "   !! failed to send large pings from host $h"
+        echo "   !! failed to send large pings ($LARGE_MTU_SIZE bytes) from host $h"
         ((errors++))
     fi
 done;
