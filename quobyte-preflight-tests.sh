@@ -110,7 +110,7 @@ nmap_client=$(shuf -n 1 "$clients")
 
 echo "5. Checking that all Quobyte ports are open with nmap from server $nmap_server..."
 for h in $server_hosts; do
-    ssh $SSH_OPTS $nmap_server "if ! sudo nmap -sn --send-ip -oG - $h | grep -q 'Status: Up'; then exit 1; fi; if sudo nmap --send-ip -sUT -p T:7871-7876,T:7861-7866,U:7861-7866,T:80,T:8080,T:7860 $h | grep -q ' filtered'; then exit 2; fi"
+    ssh $SSH_OPTS $nmap_server "if ! sudo nmap -sn --send-ip -oG - $h | grep -q 'Status: Up'; then exit 1; fi; if sudo nmap --send-ip -sUT -p T:7871-7876,T:7861-7866,U:7861-7866,T:80,T:8080,T:7860 $h | grep -q -E ' (open[|])?filtered'; then exit 2; fi"
     rv=$?
     case $rv in
         1)
