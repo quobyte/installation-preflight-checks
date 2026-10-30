@@ -4,7 +4,7 @@
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <servers-file> <clients-file>"
     echo "       This script runs the pre-flight checks for a Quobyte installation on server and clients hosts."
-    echo "       It requires password-less ssh login and sudo on each host. nmap is required on the clients hosts."
+    echo "       It requires password-less ssh login and sudo on each host. nmap is required on all hosts."
     echo "       <servers-file> a list of hostnames or IP addresses, one per line"
     echo "       <clients-file> a list of hostnames or IP addresses, one per line"
     echo ""
@@ -132,7 +132,7 @@ for h in $server_hosts; do
     rv=$?
     case $rv in
         1)
-            echo "   !! host not reachable $h from server $nmap_client"
+            echo "   !! host is not reachable $h from client $nmap_client"
             ((errors++))
             ;;
         2)
@@ -168,7 +168,7 @@ done
 echo "   DONE"
 if [ "$qns_failure" -ne 0 ]; then
     echo "   WARNING: QNS not reachable from all server hosts. Please check connectivity or"
-    echo "            follow insructions for an installation with custom DNS records."
+    echo "            follow instructions for an installation with custom DNS records."
 fi
 echo ""
 
@@ -200,6 +200,8 @@ for h in $server_hosts; do
         ((errors++))
     fi
 done
+echo "   DONE"
+echo ""
 
 echo "11. Checking if SELinux or AppArmor is running on any server..."
 for h in $server_hosts; do
@@ -216,6 +218,8 @@ for h in $server_hosts; do
             ;;
     esac
 done
+echo "   DONE"
+echo ""
 
 if [ $errors -ne 0 ]; then
     echo ""
