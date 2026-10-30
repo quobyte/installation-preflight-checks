@@ -158,7 +158,7 @@ echo ""
 echo "8. Checking QNS connectivity on server machines..."
 qns_failure=0
 for h in $server_hosts; do
-    ssh $SSH_OPTS $h 'curl -s --connect-timeout 5 https://gk6z7wszg1.execute-api.eu-central-1.amazonaws.com/v1 &>/dev/null || exit 1'
+    ssh $SSH_OPTS $h 'code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 https://gk6z7wszg1.execute-api.eu-central-1.amazonaws.com/v1); [ "$code" != "000" ] && [ "$code" -lt 500 ] || exit 1'
     if [ $? -ne 0 ]; then
         echo "   !! failed to contact QNS endpoint from host $h"
         ((errors++))
